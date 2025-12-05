@@ -1,0 +1,77 @@
+---
+title: "Análisis exploratorio de la sequía en la Precordillera del Limarí (Región de Coquimbo, Chile)"
+author: Ignacio Pizarro
+format:
+  html:
+    toc: false
+---
+## Introducción
+![Inicio de las veranadas en el Río Cogotí (Fuente: Diario El Combarbalino)](imagenes/IMG.jpg){fig-alt="inicio de veranadas en combarbalá" width="100%"}
+
+La precordillera del Limarí se encuentra compuesta por las comunas de Monte Patria y Combarbalá (Región de Coquimbo), se caracteriza por su clima semiárido, con veranos secos e inviernos con breves precipitaciones. Esto se debe principalmente a que la zona (Al igual que el resto del Norte chico) es altamente sensible al ENSO - El Niño Oscilación Sur (Meza, 2013), un patrón climático natural en el Pacífico que incluye fases cálidas (El Niño) y frías (La Niña). Este fenómeno oscila cada 2 a 7 años y genera diferencias importantes en los patrones de precipitación, temperatura y humedad.
+
+Los habitantes de la precordillera se han adaptado a esta oscilación teniendo un sistema de pastoreo conocido como *transhumancia*, la cual se divide las zonas de pastoreo en veranada e invernada. Esta forma de ganadería tradicional regula los tiempos de pastoreo en función de la disponibilidad de recursos hídricos y es una forma de adaptarse a la oscilación constante de precipitaciones producto del ENSO (Erazo & Garay-Flühmann, 2011). A pesar de esta adaptación tradicional, los crianceros reportan en la actualidad que la temporada de veranadas está cambiando por una disminución nunca antes vista sobre la disponibilidad de agua y pasto.
+
+Para analizar la disponibilidad de recursos hídricos en la zona de estudio, se realizó un análisis exploratorio en dos estaciones meteorológicas: Cogotí (Comuna de Combarbalá) y Las Ramadas (Comuna de Monte Patria) durante el periodo 1970-2015. Este análisis incluye la creación de boxplots de precipitación mensual y líneas de tiempo del Índice de Precipitación-Evapotranspiración Estandarizado (SPEI) para identificar los periodos de sequía en la zona que se denominará a continuación como **Limarí Precordillerano**.
+
+## Área de Estudio
+![](imagenes/mapa_estudio.png){fig-alt="mapa de combarbalá y monte patria"}
+
+
+## Precipitación mensual
+
+La precipitación en este sector se caracteriza ser casi nula entre los meses de noviembre y febrero. La recarga hídrica de la comuna se da durante los meses de mayo y agosto (periodo de invernada), donde se activan las quebradas que recargan los ríos y nieva en la cordillera.
+
+En la estación Las Ramadas, la precipitación se observa de la siguiente forma:
+
+![Boxplot de precipitación en Las Ramadas](figuras/boxplot_las_ramadas.png){fig-alt="inicio de veranadas en combarbalá" width="100%"}
+![Boxplot de precipitación en Cogotí](figuras/boxplot_cogot'i.png){fig-alt="inicio de veranadas en combarbalá" width="100%"}
+
+# Análisis del índice SPEI en Cogotí y Ramadas
+
+
+Este sitio reúne un análisis exploratorio del índice de Precipitación-Evapotranspiración Estandarizado (SPEI), este permite medir la sequía en un sector a partir de la comparación temporal de datos de precipitación mensual, temperatura máxima y minima (Hargreaves, 1994). Para este estudio, se utilizó SPEI 12 (el cual mide sequia en un periodo de 12 meses consecutivos) y SPEI 3 (mide sequia en un periodo de 3 meses consecutivos) en dos estaciones meteorológicas de dos localidades:
+
+La clasificación del SPEI divide en valores positivos y negativos la humedad, como se observa en la siguiente tabla: 
+![](imagenes/tabla_SPEI.jpg){fig-alt="Tabla de valores SPEI"}
+
+
+A partir de series históricas de precipitación y temperatura máxima/mínima, se calcula:
+
+1.  La **evapotranspiración potencial (ETP)** mediante el método de Hargreaves.\
+2.  El **balance hídrico mensual** (precipitación menos ETP).\
+3.  El **SPEI** a distintas escalas temporales (3 y 12 meses), para identificar periodos de sequía y humedad.
+
+------------------------------------------------------------------------
+
+## Exploración de datos
+
+-   Una serie con los registros de cada estación.
+-   Gráficos del **SPEI a 12 meses**, que permiten ver tendencias de sequía prolongada en el tiempo.
+![](figuras/spei_12.png){fig-alt="calculo de SPEI 12 en combarbalá" width="100%"}
+
+-   Gráficos del **SPEI a 3 meses**, útiles para variaciones más rápidas en la disponibilidad hídrica, siendo útil para evaluar los efectos en actividades de agricultura y ganadería.
+
+![](figuras/spei_03.png){fig-alt="calculo de SPEI 3 en combarbalá" width="100%"}
+
+
+Puedes ir directamente al análisis detallado acá:
+
+
+-   👉 [Ver análisis SPEI](spei.qmd)
+
+------------------------------------------------------------------------
+## Conclusiones
+------------------------------------------------------------------------
+
+## Notas técnicas
+-   Datos provenientes de la plataforma https://explorador.cr2.cl del Centro de Ciencia del Clima y Resiliencia (CR2)
+-   Datos utilizados: series mensuales de precipitación (mm), temperatura máxima (°C) y mínima (°C).
+-   Uso del paquete ***SPEI*** en RStudio con el cálculo de Evotranspiración: función `hargreaves()` 
+-   Cálculo de SPEI: función `spei()` del mismo paquete, para escalas de 3 y 12 meses.
+-   Sitio generado con **Quarto** y publicado como website estático.
+
+## Bibliografía
+Erazo, M. B., & Garay-Flühmann, R. (2011). Tierras secas e identidad. Una aproximación cultural a las prácticas de subsistencia de las comunidades campesinas del semiárido: Provincia de Elqui, Chile. Revista de Geografía Norte Grande, (50), 45-61.
+
+Meza, F. J. (2013). Recent trends and ENSO influence on droughts in Northern Chile: An application of the Standardized Precipitation Evapotranspiration Index. Weather and Climate extremes, 1, 51-58.
