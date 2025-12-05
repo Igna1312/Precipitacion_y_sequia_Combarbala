@@ -1,256 +1,201 @@
 ---
-title: "Análisis SPEI"
-format:
-  html:
-    fig-width: 8
-    fig-height: 4
+title: "Análisis de Precipitación y SPEI"
+author: "Ignacio Pizarro"
+format:               # <--- Falta esta línea clave
+  html:               # <--- Debe tener 2 espacios de sangría
+    fig-width: 8      # <--- 4 espacios
+    fig-height: 5
+    code-fold: true
+    toc: true
+editor: visual
+lang: es
 ---
 
-## Cargar paquetes y datos
+## 1. Configuración Inicial
 
+Cargamos las librerías necesarias y definimos las rutas de los 6 archivos crudos (Precipitación, T.Máx y T.Mín para cada estación).
 ```{r}
+#| label: setup
+#| warning: false
+#| message: false
 
-rm(list = ls())  # Limpia el entorno (opcional, para partir de cero)
+# Limpiar memoria
+rm(list = ls())
 
-###########################################################
-# 1. Cargar paquetes necesarios
-###########################################################
-pkgs <- c("dplyr", "ggplot2", "SPEI", "lubridate", "purrr", "tibble")
+# 1. Cargar paquetes
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, SPEI, lubridate, fs, here)
 
-inst <- pkgs[!pkgs %in% installed.packages()[, "Package"]]
-if (length(inst) > 0) install.packages(inst)
+# 2. Definir Rutas de Datos Crudos
+# Asumimos que los archivos están en "data/data_raw/" con nombres simplificados
+# (Si usas los nombres largos originales, cámbialos aquí)
 
-lapply(pkgs, library, character.only = TRUE)
+# Estación Las Ramadas
+ruta_ram_pp   <- here::here("data", "data_raw", "ramadas_pmen.csv")
+ruta_ram_tmax <- here::here("data", "data_raw", "ramadas_tmax.csv")
+ruta_ram_tmin <- here::here("data", "data_raw", "ramadas_tmin.csv")
 
-###########################################################
-# 2. Leer las bases de cada estación
-###########################################################
+# Estación Cogotí
+ruta_cog_pp   <- here::here("data", "data_raw", "cogoti_pmen.csv")
+ruta_cog_tmax <- here::here("data", "data_raw", "cogoti_tmax.csv")
+ruta_cog_tmin <- here::here("data", "data_raw", "cogoti_tmin.csv")
 
+# Rutas de Salida
+dir_figuras   <- here::here("figuras")
+dir_data_proc <- here::here("data", "data_procesada")
 
-cogoti_raw <- read.csv(
-  "data/cogoti_spei.csv",
-  header = TRUE,
-  stringsAsFactors = FALSE
-)
+# 3. Verificación rápida
+archivos_requeridos <- c(ruta_ram_pp, ruta_ram_tmax, ruta_ram_tmin, 
+                         ruta_cog_pp, ruta_cog_tmax, ruta_cog_tmin)
 
-ramadas_raw <- read.csv(
-  "data/ramadas_spei.csv",
-  header = TRUE,
-  stringsAsFactors = FALSE,
-  sep = ";"
-)
-
-# Revisa cómo se llaman las columnas
-names(cogoti_raw)
-names(ramadas_raw)
-
-###########################################################
-# 3. Dejar los mismos nombres de columnas en ambas bases
-#    (agno, mes, dia, pmen, tmax, tmin)
-###########################################################
-names(cogoti_raw)  <- c("agno", "mes", "dia", "pmen", "tmax", "tmin")
-names(ramadas_raw) <- c("agno", "mes", "dia", "pmen", "tmax", "tmin")
-
-
-# ------------------------------------------------------------
-# Boxplot Mensual: Sin Outliers + Color por Intensidad
-# ------------------------------------------------------------
-
-# 1) Cargar datos
-ruta_archivo <- "~/Desktop/spei/ramadas_spei (1971-2015)(Serie).csv"
-df <- read.csv(ruta_archivo, stringsAsFactors = FALSE)
-
-# Asegurar que la columna se llame 'pmen'
-if(!"pmen" %in% names(df) && "valor" %in% names(df)) {
-  df$pmen <- df$valor
+existencia <- file.exists(archivos_requeridos)
+if (!all(existencia)) {
+  stop("ERROR: Faltan archivos en data/data_raw/. Verifica los nombres.\nFaltan: ", 
+       paste(archivos_requeridos[!existencia], collapse = "\n"))
 }
 
-# 2) Filtrar periodo (1971-2015)
-df_filtrado <- subset(df, agno >= 1971 & agno <= 2015)
+# Crear carpetas de salida
+if (!dir.exists(dir_figuras)) dir.create(dir_figuras, recursive = TRUE)
+if (!dir.exists(dir_data_proc)) dir.create(dir_data_proc, recursive = TRUE)
 
-# 3) Convertir mes a Factor con nombres (Ene, Feb...)
-df_filtrado$mes_f <- factor(df_filtrado$mes,
-                            levels = 1:12,
-                            labels = c("Ene", "Feb", "Mar", "Abr", "May", "Jun",
-                                       "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"))
+message("Configuración exitosa. Archivos crudos encontrados.")
+```
 
-# ------------------------------------------------------------
-# LOGICA DE COLORES INTELIGENTES
-# ------------------------------------------------------------
-# A) Calcular la mediana de lluvia para cada mes
-medianas <- tapply(df_filtrado$pmen, df_filtrado$mes, median, na.rm=TRUE)
+2. Procesamiento e Integración de Datos
 
-# B) Crear una paleta de 100 tonos de azul (de muy claro a oscuro)
-paleta_azul <- colorRampPalette(c("#E0F3DB", "#084081"))(100) # De verde-azul claro a azul noche
+En esta etapa leemos los archivos individuales de temperatura y precipitación, los unimos por año y mes, y calculamos el balance hídrico.
+```{r}
+#| label: procesamiento
+#| message: false
+#| warning: false
 
-# C) Asignar un color a cada mes según su mediana
-# Normalizamos los valores entre 1 y 100 para elegir el tono
-rango_max <- max(medianas)
-rango_min <- min(medianas)
-indices <- floor(((medianas - rango_min) / (rango_max - rango_min)) * 99) + 1
-colores_finales <- paleta_azul[indices]
+# Función auxiliar para leer y preparar cada archivo
+# Lee el CSV, selecciona solo año/mes/valor y renombra la columna valor
+leer_variable <- function(ruta, nombre_var) {
+  read_csv(ruta, show_col_types = FALSE) %>%
+    select(agno, mes, valor) %>%
+    rename(!!nombre_var := valor) # Renombra 'valor' a 'pmen', 'tmax' o 'tmin'
+}
 
-# ------------------------------------------------------------
-# GRAFICO
-# ------------------------------------------------------------
+# --- PROCESAMIENTO LAS RAMADAS ---
+ram_pp   <- leer_variable(ruta_ram_pp, "pmen")
+ram_tmax <- leer_variable(ruta_ram_tmax, "tmax")
+ram_tmin <- leer_variable(ruta_ram_tmin, "tmin")
 
-par(mar = c(5, 5, 4, 2) + 0.1) 
+# Unir las 3 variables (full_join para no perder meses si falta algún dato)
+df_ramadas <- list(ram_pp, ram_tmax, ram_tmin) %>%
+  reduce(full_join, by = c("agno", "mes")) %>%
+  mutate(estacion = "Las Ramadas")
 
-boxplot(pmen ~ mes_f, 
-        data = df_filtrado,
-        col  = colores_finales,    # Usamos nuestros colores calculados
-        main = "Precipitación Mensual (Ramadas 1971-2015)\n(Sin Outliers)",
-        xlab = "Mes",
-        ylab = "Precipitación (mm)",
-        las  = 1,
-        outline = FALSE,           # <--- ESTO QUITA LOS OUTLIERS
-        varwidth = TRUE,           # Ancho de cajas proporcional (opcional)
-        cex.axis = 0.9
-)
+# --- PROCESAMIENTO COGOTÍ ---
+cog_pp   <- leer_variable(ruta_cog_pp, "pmen")
+cog_tmax <- leer_variable(ruta_cog_tmax, "tmax")
+cog_tmin <- leer_variable(ruta_cog_tmin, "tmin")
 
-grid(nx = NA, ny = NULL, lty = 3, col = "gray85")
+df_cogoti <- list(cog_pp, cog_tmax, cog_tmin) %>%
+  reduce(full_join, by = c("agno", "mes")) %>%
+  mutate(estacion = "Cogotí")
 
-# LEYENDA
-legend("topright", legend = c("Más lluvioso", "Menos lluvioso"), 
-       fill = c(paleta_azul[100], paleta_azul[1]), bty = "n", cex=0.8)
-
-###########################################################
-# 4. Crear columna de fecha y marcar estación meteorológica
-###########################################################
-cogoti <- cogoti_raw |>
+# - --- UNIFICACIÓN Y CÁLCULOS ---
+datos <- bind_rows(df_ramadas, df_cogoti) %>%
+  mutate(fecha = make_date(agno, mes, 1)) %>%
+  # --- CORRECCIÓN CLAVE AQUÍ ---
+  # Eliminamos filas sin temperatura ANTES de calcular hargreaves
+  drop_na(tmax, tmin) %>%
   mutate(
-    estacion = "Cogotí",
-    fecha    = make_date(year = agno, month = mes, day = dia)
-  )
-
-ramadas <- ramadas_raw |>
-  mutate(
-    estacion = "Las Ramadas",
-    fecha    = make_date(year = agno, month = mes, day = dia)
-  )
-
-###########################################################
-# 5. Unir ambas estaciones en un solo data frame
-###########################################################
-datos <- bind_rows(cogoti, ramadas) |>
+    # Ahora sí podemos calcular ETP sin errores
+    etp = hargreaves(tmin, tmax, lat = -31.0358),
+    bal = pmen - etp
+  ) %>%
+  # Limpiamos si falta precipitación o balance final
+  drop_na(bal) %>%
   arrange(estacion, fecha)
 
-###########################################################
-# 6. Calcular ETP (Hargreaves) y balance hídrico
-###########################################################
-# IMPORTANTE:
-# - Aquí puedes filtrar NAs si tu base tiene días/meses sin datos (acá hubieron como 4 datos perdidos OJITO).
-#   Ejemplo: filter(!is.na(tmax), !is.na(tmin), !is.na(pmen))
-###########################################################
-datos <- datos |>
+# Guardar CSV procesado completo
+write_csv(datos, path(dir_data_proc, "datos_procesados_unificados.csv"))
+
+# --- CÁLCULO DE SPEI ---
+datos_spei <- datos %>%
+  group_by(estacion) %>%
+  nest() %>%
   mutate(
-    etp  = hargreaves(tmin, tmax, lat = -31.035833),  # Cambia lat si quieres otra
-    bal  = pmen - etp
-  )
+    spei_12 = map(data, ~ as.numeric(spei(.x$bal, 12)$fitted)),
+    spei_03 = map(data, ~ as.numeric(spei(.x$bal, 3)$fitted))
+  ) %>%
+  unnest(cols = c(data, spei_12, spei_03)) %>% 
+  ungroup()
 
-###########################################################
-# 7. Usar purrr para calcular SPEI por estación meteo
-###########################################################
-# Separa la base en una lista: una tabla por estación ("Cogotí", "Ramadas")
-lista_est <- split(datos, datos$estacion)
+# Mostrar un resumen
+glimpse(datos_spei)
+```
 
-# Función que calcula SPEI k-mensual para una estación
-calc_spei_estacion <- function(df, escala = 12) {
-  df <- df[order(df$fecha), ]      # Ordenar por fecha por si acaso
-  spei_obj <- spei(df$bal, escala) # Cálculo de SPEI
-  
-  tibble(
-    fecha    = df$fecha,
-    estacion = unique(df$estacion),
-    spei     = as.numeric(spei_obj$fitted),
-    escala   = escala
-  )
+3. Visualización: Precipitación Mensual
+
+Análisis de la distribución de lluvias para la estación Las Ramadas (1970-2015).
+```{r}
+#| label: fig-boxplot
+#| fig-cap: "Distribución de precipitación mensual en Las Ramadas (1970-2015)"
+
+# Filtrar datos (Rango ajustado 1970-2015)
+df_box <- datos_spei %>% 
+  filter(estacion == "Las Ramadas", year(fecha) >= 1970 & year(fecha) <= 2015)
+
+# Calcular colores
+medianas <- tapply(df_box$pmen, df_box$mes, median, na.rm=TRUE)
+paleta   <- colorRampPalette(c("#E0F3DB", "#084081"))(100)
+colores  <- paleta[findInterval(medianas, seq(min(medianas), max(medianas), length.out = 100))]
+meses_esp <- c("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+
+# Función de ploteo
+plot_boxplot <- function() {
+  par(mar = c(4, 5, 3, 1))
+  boxplot(pmen ~ factor(mes, levels=1:12, labels = meses_esp), data = df_box,
+          col = colores, outline = FALSE, main = "Pp Mensual Ramadas (1970-2015)",
+          ylab = "Pp (mm)", las = 1, varwidth = TRUE)
+  grid(nx = NA, ny = NULL, lty = 3)
+  legend("topright", legend=c("Húmedo","Seco"), fill=c(paleta[100], paleta[1]), bty="n", cex=0.8)
 }
 
-# SPEI-12 meses 
-spei12_est <- map_dfr(lista_est, calc_spei_estacion, escala = 12)
+plot_boxplot()
 
-# (Opcional) SPEI-3 meses:
-spei3_est  <- map_dfr(lista_est, calc_spei_estacion, escala = 3)
+# Guardar PNG
+png(path(dir_figuras, "boxplot_ramadas.png"), width = 800, height = 500)
+plot_boxplot()
+dev.off()
+```
 
-###########################################################
-# 8. Gráfico tipo “pluma” SPEI-12 (barras azules/rojas)
-###########################################################
-# AQUÍ ES DONDE PUEDES CAMBIAR:
-# - Colores de seco/húmedo (scale_fill_manual)
-# - Título, ejes, tamaño de letra (labs + theme)
-# - N° de columnas de los facets (facet_wrap)
-###########################################################
+4. Visualización: Índice SPEI
 
-ggplot(spei12_est, aes(x = fecha, y = spei)) +
-  # Línea horizontal en 0 (umbral neutral)
-  geom_hline(yintercept = 0, color = "grey40", linewidth = 0.4) +
-  
-  # Barras: las positivas van hacia arriba, las negativas hacia abajo
-  # Usamos ifelse dentro de aes(y = ...) para que siempre partan desde 0
-  geom_col(
-    data = ~ subset(.x, spei >= 0),
-    aes(y = spei),
-    fill = "#6a994e",        # ← COLOR DE LAS BARRAS HÚMEDAS (cámbialo aquí)
-    width = 30                  # ancho aproximado de la barra (días)
-  ) +
-  geom_col(
-    data = ~ subset(.x, spei < 0),
-    aes(y = spei),
-    fill = "darkred",        # ← COLOR DE LAS BARRAS SECAS (cámbialo aquí)
-    width = 30
-  ) +
-  
-  # Un panel por estación meteorológica
-  facet_wrap(~ estacion, ncol = 1, scales = "free_x") +
-  
-  # Títulos de los ejes y del gráfico
-  labs(
-    title = "Índice Estandarizado de Evotranspiración (SPEI) de 12 meses",
-    x     = "Años",
-    y     = "Valor del balance hídrico"
-  ) +
-  
-  # Tema visual general
-  theme_minimal(base_size = 13) +
-  theme(
-    plot.title   = element_text(face = "bold", hjust = 0.5),  # centrado
-    strip.text   = element_text(face = "bold", size = 14),    # títulos de los panels
-    axis.text.x  = element_text(angle = 45, hjust = 1),       # etiquetas de años inclinadas
-    panel.grid.minor = element_blank()
-  )
+Evolución histórica de las sequías (SPEI-12 y SPEI-3).
+```{r}
+#| label: fig-spei
+#| fig-height: 10
+#| fig-cap: "Evolución del índice SPEI a 12 y 3 meses"
+#| warning: false
 
+# Filtrar datos para gráfico
+datos_grafico <- datos_spei %>% 
+  filter(year(fecha) >= 1970 & year(fecha) <= 2015)
 
-###########################################################
-# 9. (Opcional) Mismo tipo de gráfico, pero para SPEI-3
-###########################################################
-ggplot(spei3_est, aes(x = fecha, y = spei)) +
-  geom_hline(yintercept = 0, color = "grey40", linewidth = 0.4) +
-  geom_col(
-    data = ~ subset(.x, spei >= 0),
-    aes(y = spei),
-    fill = "#6a994e",        
-    width = 30
-  ) +
-  geom_col(
-    data = ~ subset(.x, spei < 0),
-    aes(y = spei),
-    fill = "darkred",
-    width = 30
-  ) +
-  facet_wrap(~ estacion, ncol = 1, scales = "free_x") +
-  labs(
-    title = "Índice Estandarizado de Evotranspiración (SPEI) de 3 meses",
-    x     = "Años",
-    y     = "Valor del balance hídrico"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    plot.title   = element_text(face = "bold", hjust = 0.5),
-    strip.text   = element_text(face = "bold", size = 14),
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid.minor = element_blank()
-  )
+# Función para gráficos
+plot_spei <- function(df, var_spei, titulo) {
+  ggplot(df, aes(x = fecha, y = .data[[var_spei]])) +
+    geom_hline(yintercept = 0, color = "grey40", linewidth = 0.4) +
+    geom_col(aes(fill = .data[[var_spei]] >= 0), width = 30) +
+    facet_wrap(~ estacion, ncol = 1, scales = "free_x") +
+    scale_fill_manual(values = c("TRUE" = "#6a994e", "FALSE" = "darkred"), guide = "none") +
+    labs(title = titulo, x = "Año", y = "SPEI") +
+    theme_minimal(base_size = 13) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"), 
+          strip.text = element_text(face="bold"))
+}
 
+g12 <- plot_spei(datos_grafico, "spei_12", "SPEI 12 Meses (1970-2015)")
+g03 <- plot_spei(datos_grafico, "spei_03", "SPEI 3 Meses (1970-2015)")
 
+print(g12)
+print(g03)
+
+ggsave(path(dir_figuras, "spei_12.png"), g12, width = 10, height = 6, dpi = 300)
+ggsave(path(dir_figuras, "spei_03.png"), g03, width = 10, height = 6, dpi = 300)
 ```

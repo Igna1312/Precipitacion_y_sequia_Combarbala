@@ -69,6 +69,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="nav-fixed fullcontent">
@@ -140,7 +141,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="data/IMG.jpg" class="img-fluid figure-img" style="width:100.0%" alt="inicio de veranadas en combarbalá"></p>
+<p><img src="imagenes/IMG.jpg" class="img-fluid figure-img" style="width:100.0%" alt="inicio de veranadas en combarbalá"></p>
 <figcaption>Inicio de las veranadas en el Río Cogotí (Fuente: Diario El Combarbalino)</figcaption>
 </figure>
 </div>
@@ -152,7 +153,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="área-de-estudio">Área de Estudio</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="data/mapa_comba.jpg" class="img-fluid figure-img" style="width:60.0%" alt="mapa de combarbalá"></p>
+<p><img src="imagenes/mapa_comba.jpg" class="img-fluid figure-img" style="width:60.0%" alt="mapa de combarbalá"></p>
 <figcaption>Mapa de la comuna de Combarbalá y las estaciones meteorológicas utilizadas)</figcaption>
 </figure>
 </div>
@@ -161,6 +162,12 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="precipitación-mensual">Precipitación mensual</h2>
 <p>La precipitación en Combarbalá se caracteriza ser casi nula entre los meses de noviembre y febrero. La recarga hídrica de la comuna se da durante los meses de mayo y agosto (periodo de invernada), donde se activan las quebradas que recargan los ríos y nieva en la cordillera.</p>
 <p>En la estación Las Ramadas, la precipitación se observa de la siguiente manera:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figuras/boxplot_ramadas.png" class="img-fluid figure-img" style="width:100.0%" alt="inicio de veranadas en combarbalá"></p>
+<figcaption>Boxplot de precipitación en Las Ramadas</figcaption>
+</figure>
+</div>
 </section>
 <section id="análisis-del-índice-spei-en-cogotí-y-ramadas" class="level1">
 <h1>Análisis del índice SPEI en Cogotí y Ramadas</h1>
@@ -181,16 +188,11 @@ ul.task-list li input[type="checkbox"] {
 <section id="exploración-de-datos" class="level2">
 <h2 class="anchored" data-anchor-id="exploración-de-datos">Exploración de datos</h2>
 <ul>
-<li>Una serie con los registros de cada estación.</li>
-<li>Gráficos del <strong>SPEI a 12 meses</strong>, que permiten ver tendencias de sequía prolongada en el tiempo.</li>
-<li>Gráficos del <strong>SPEI a 3 meses</strong>, útiles para variaciones más rápidas en la disponibilidad hídrica, siendo útil para evaluar los efectos en actividades de agricultura y ganadería.</li>
+<li><p>Una serie con los registros de cada estación.</p></li>
+<li><p>Gráficos del <strong>SPEI a 12 meses</strong>, que permiten ver tendencias de sequía prolongada en el tiempo. <img src="figuras/spei_12.png" class="img-fluid" style="width:100.0%" alt="calculo de SPEI 12 en combarbalá"></p></li>
+<li><p>Gráficos del <strong>SPEI a 3 meses</strong>, útiles para variaciones más rápidas en la disponibilidad hídrica, siendo útil para evaluar los efectos en actividades de agricultura y ganadería.</p></li>
 </ul>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="data/images-2.jpeg" class="img-fluid figure-img" style="width:100.0%" alt="Mapa de la zona de estudio (Cogotí y Las Ramadas, Región de Coquimbo)."></p>
-<figcaption>La foto mas HD que pude encontrar</figcaption>
-</figure>
-</div>
+<p><img src="figuras/spei_03.png" class="img-fluid" style="width:100.0%" alt="calculo de SPEI 3 en combarbalá"></p>
 <p>Puedes ir directamente al análisis detallado acá:</p>
 <ul>
 <li>👉 <a href="./spei.html">Ver análisis SPEI</a></li>

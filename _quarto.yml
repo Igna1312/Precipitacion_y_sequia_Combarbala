@@ -6,6 +6,7 @@ website:
   title: "SPEI – Cogotí y Ramadas"
   navbar:
     left:
+      # Asegúrate que estas carpetas existan (si tus archivos están en la raíz, borra 'pagina_quarto/')
       - href: index.qmd
         text: Inicio
       - href: spei.qmd
@@ -15,3 +16,4 @@ format:
   html:
     theme: cosmo
     toc: true
+    css: styles.css
