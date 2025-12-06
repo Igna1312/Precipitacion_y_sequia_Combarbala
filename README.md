@@ -12,7 +12,7 @@ Este proyecto analiza el comportamiento historico de las precipitaciones y la se
 El proyecto esta organizado de la siguiente manera:
 
 ```bash
-Precipitacion_y_sequia_Combarbala/
+Precipitacion_y_sequia_Limari/
 ├── _quarto.yml          # Configuracion del sitio web
 ├── index.qmd            # Pagina de inicio y analisis de datos
 ├── spei.qmd             # Codigo R y Graficos
