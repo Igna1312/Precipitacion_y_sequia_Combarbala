@@ -21,18 +21,21 @@ Esta página está pensada para profesionales que les interese conocer sobre el 
 
 Objetivo general: Explorar los patrones de precipitación en el Limarí precordillerano a través de dos estaciones meteorológicas durante el periodo 1970-2015
 
-Objetivos específicos:  
--   1) Identificar los patrones de precipitación a una escala anual
--   2) Analizar los cambios en  los patrones de sequía durante el periodo 1970 - 2015
--   3) Comparar el comportamiento de ambas estaciones ante la sequía
+Objetivos específicos
+
+1) Identificar los patrones de precipitación a una escala anual
+
+2) Analizar los cambios en  los patrones de sequía durante el periodo 1970 - 2015
+
+3) Comparar el comportamiento de ambas estaciones ante la sequía
 
 ## Materiales y Métodos
 
-Para analizar la disponibilidad de recursos hídricos en la zona de estudio, se realizó un análisis exploratorio en dos estaciones meteorológicas: Cogotí (Comuna de Combarbalá) y Las Ramadas (Comuna de Monte Patria) durante el periodo 1970-2015. Este análisis incluye la creación de boxplots de precipitación mensual y líneas de tiempo del Índice de Precipitación-Evapotranspiración Estandarizado (SPEI) para identificar los periodos de sequía, este permite medir la sequía de un sector a partir de la comparación temporal de datos de precipitación mensual, temperatura máxima y minima (Hargreaves, 1994). Para este estudio, se utilizó SPEI 12 (el cual mide sequia en un periodo de 12 meses consecutivos) y SPEI 3 (mide sequia en un periodo de 3 meses consecutivos), lo que permite observar los impactos de la sequía a diferentes escalas (Beguería et al,. 2014). 
+Para analizar la disponibilidad de recursos hídricos en la zona de estudio, se realizó un análisis exploratorio en dos estaciones meteorológicas: Cogotí (Comuna de Combarbalá) y Las Ramadas (Comuna de Monte Patria) durante el periodo 1970-2015. Este análisis incluye la creación de boxplots de precipitación mensual y líneas de tiempo del **Índice de Precipitación-Evapotranspiración Estandarizado (SPEI)** para identificar los periodos de sequía, este índice bajo el método de Hargreaves permite medir la sequía de un sector a partir de la comparación temporal de datos de precipitación mensual, temperatura máxima y minima (Beguería et al,. 2014). Para este estudio, se utilizó SPEI 12 (el cual mide sequia en un periodo de 12 meses consecutivos) y SPEI 3 (mide sequia en un periodo de 3 meses consecutivos), lo que permite observar los impactos de la sequía a diferentes escalas. 
 
 ## Área de Estudio
-![Mapa elaborado con ArcgisPro](imagenes/mapa_estudio.png){fig-alt="mapa de combarbalá y monte patria"}
-
+![Mapa elaborado con información del CR2 y los estudios de Aranda (1970) mediante Arcgis Pro](imagenes/mapa_estudio.png){fig-alt="mapa de combarbalá y monte patria"}
+Las zonas de veranada comienzan desde los 1.700 metros sobre el nivel del mar (msnm) (precordillera), pero la mayoría de los campamentos se encuentra ya en la cordillera, entre los 2.200 y 3.400 (msnm). Es aquí donde se mueven los crianceros entre los meses de noviembre y abril (Castillo, 2003). Podemos observar que estos se ubican donde nacen los ríos y la mayoría de estos puestos se encuentra en Monte Patria (8), habiendo sólo 4 puestos en Combarbalá.
 
 ## Precipitación mensual
 
@@ -40,31 +43,34 @@ La precipitación en el Limarí precordillerado se caracteriza ser casi nula ent
 
 El patrón de precipitación anual se observa de la siguiente forma en las dos estaciones
 
-![Boxplot de precipitación en Las Ramadas](figuras/boxplot_las_ramadas.png){fig-alt="boxplot_ramadas" width="100%"}
-![Boxplot de precipitación en Cogotí](figuras/boxplot_cogot'i.png){fig-alt="boxplot_cogoti" width="100%"}
+![Boxplot de precipitación en Las Ramadas](figuras/boxplot_las_ramadas.png){fig-alt="boxplot_ramadas" width="80%"}
+![Boxplot de precipitación en Cogotí](figuras/boxplot_cogot'i.png){fig-alt="boxplot_cogoti" width="80%"}
+
 Si bien ambas exiben un aumento importante entre los meses de mayo y agosto, las precipitaciones en Las Ramadas son más altas que en Cogotí. Su rango también se expande, teniendo precipitaciones hasta octubre. Esto puede deberse a que Las ramadas se ubica a más altura, teniendo una mayor precipitación por su cercanía con la Cordillera de los Andes  
 
 ## Análisis del índice SPEI en Cogotí y Las Ramadas
 
 La clasificación del SPEI divide en valores positivos y negativos la humedad, como se observa en la siguiente tabla: 
-![](imagenes/tabla_SPEI.jpg){fig-alt="Tabla de valores SPEI"}
+
+![](imagenes/tabla_SPEI.jpg){fig-alt="Tabla de valores SPEI" width="50%"}
+
+
 A partir de series históricas de precipitación y temperatura máxima/mínima, se calcula:
 
--   1.  La **evapotranspiración potencial (ETP)** mediante el método de Hargreaves.
--   2.  El **balance hídrico mensual** (precipitación menos ETP).
--   3.  El **SPEI** a distintas escalas temporales (3 y 12 meses), para identificar periodos de sequía y humedad.
+La **evapotranspiración potencial (ETP)** mediante el método de Hargreaves.
+
+El **balance hídrico mensual** (precipitación menos ETP).
+
+El **SPEI** a distintas escalas temporales (3 y 12 meses), para identificar periodos de sequía y humedad.
 
 ## Exploración de datos
-------------------------------------------------------------------------
+
 -   La serie de tiempo de **SPEI12** permite ver tendencias de sequía prolongada en el tiempo.
 
 ![](figuras/spei_12.png){fig-alt="calculo de SPEI 12 en limari" width="100%"}
 En este caso, podemos diferencias claves entre cada estación. Si bien ambas poseen periodos de sequía y humedad en que se sincronizan parcialmente, Las Ramadas tiende a tener valores más positivos que Cogotí, teniendo incluso valores positivos en 1980 cuando se marcaron índices de que Cogotí estaba severamente. Ambas estaciones pasan por picos de sequía desde 1994, con pocos años que vuelven a ser húmedos por falta de precipitación. En el periodo de 1993 hasta 2010 se comportan de forma similar ambas estaciones (Aunque Las Ramadas sigue teniendo valores más positivos), después de esto, Cogotí tiene años más húmedos que Las Ramadas, pero ambos sectores se ven afectados por periodos más extensos de sequía, habiendo pocos húmedos desde 1994.
 
 nota metodológica: El SPEI12 no pudo ser calculado para el año 1970 en Las Ramadas por falta de datos del año 1969, lo cual es fundamental para comparar los 12 meses anteriores y sacar el valor.
-
-
-------------------------------------------------------------------------
 
 -   La serie de tiempo de **SPEI3** permite variaciones más cortas en la disponibilidad hídrica, siendo útil para evaluar los efectos en actividades de agricultura y ganadería (Beguería et al., 2014).
 
@@ -73,17 +79,11 @@ En ambos casos se puede observar que los periodos de sequía y humedad son mucho
 
 En ambos casos, desde 1994 comienza a tener periodos más extensos que en las décadas anteriores como ocurrío con la serie de tiempo de SPEI12. La sequía sigue siendo bastante aguda para ambos sectores, pero Cogotí nuevamente mejores proyecciones que Las Ramadas en esta serie de tiempo, reprotando periodos cortos de mayor precipitación desde 2010.
  
-
-
-
-
-------------------------------------------------------------------------
 ## Conclusiones
 
 Comparando los graficos creados, ambas estaciones exhiben una reducción importante de su precipitación y un aumento de la sequía. El SPEI12 permite ver el comportamiento a largo plazo de la sequía, mientras que el SPEI3 evidencia que los periodos de sequía y humedad tienen una oscilación más corta. A pesar de que Las Ramadas tenga una mayor captación de precipitación que Cogotí, en ambas se puede observar que la precordillera del Limarí ha reducido de forma importante su recarga hídrica desde 1994, anteriormente, ambos sectores oscilaban en periodos cortos de sequía y humedad, pero en los últimos diez años de la serie de tiempo, se muestra que los periodos de sequía son mucho más largos. 
 
-La oscilación constante de periodos secos y húmedos es un ejemplo de cómo la transhumancia es un modo de vida adaptado a la irregularidad de precipitaciones, dado que el manejo de pisos superiores e inferiores depende en parte de la disponibilidad de recursos hídricos. Si bien no se puede tomar la precipitación como única variable para analizar este tema, con las pocas estaciones analizas hace sentido ver que hay una mayor cantidad de puestos de veranada en Monte Patria que en Combarbalá, dado que históricamente han tenido una mayor disponibilidad de recursos hídricos para realizar esta forma de pastoreo. Para analizar esta dinámica (que escapa el objetivo de este análisis exploratorio) se proyecta el comparar la cantidad de ganado transhumante con series de precipitación y SPEI para vercómo esta ganadería tradiiconal se comporta ante los cambios de periodos húmedos y secos en la precoridllera del Limarí.
-------------------------------------------------------------------------
+La oscilación constante de periodos secos y húmedos es un ejemplo de cómo la transhumancia es un modo de vida adaptado a la irregularidad de precipitaciones, dado que el manejo de pisos superiores e inferiores depende en parte de la disponibilidad de recursos hídricos. Si bien no se puede tomar la precipitación como única variable para analizar este tema, con las pocas estaciones analizas hace sentido ver que hay una mayor cantidad de puestos de veranada en Monte Patria que en Combarbalá, dado que históricamente han tenido una mayor disponibilidad de recursos hídricos para realizar esta forma de pastoreo. Para analizar esta dinámica (la cual escapa de este análisis exploratorio) se proyecta en un futuro comparar la cantidad de ganado transhumante con series de precipitación y SPEI para ver cómo esta ganadería tradiricional se comporta ante los cambios de periodos húmedos y secos en la precoridllera del Limarí.
 
 ## Notas técnicas
 
@@ -96,7 +96,12 @@ La oscilación constante de periodos secos y húmedos es un ejemplo de cómo la 
 -   [Sobre el proyecto](README.md)
 
 ## Bibliografía
+
+Aranda, X. (1970). Algunas consideraciones sobre la transhumancia en el norte chico.
+
 Beguería, S., Vicente‐Serrano, S. M., Reig, F., & Latorre, B. (2014). Standardized precipitation evapotranspiration index (SPEI) revisited: parameter fitting, evapotranspiration models, tools, datasets and drought monitoring. International journal of climatology, 34(10), 3001-3023.
+
+Castillo, G. (2003). La vuelta de los años: reseñas y perspectivas sobre las comunidades, el pastoreo y la trashumancia en la región semiárida de Chile. Dinámicas de los sistemas agrarios en Chile árido: la región de Coquimbo, Santiago: LOM.
 
 Erazo, M. B., & Garay-Flühmann, R. (2011). Tierras secas e identidad. Una aproximación cultural a las prácticas de subsistencia de las comunidades campesinas del semiárido: Provincia de Elqui, Chile. Revista de Geografía Norte Grande, (50), 45-61.
 
