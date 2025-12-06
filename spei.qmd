@@ -25,18 +25,14 @@ rm(list = ls())
 
 # 1. Cargar paquetes
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, SPEI, lubridate, fs, here, purrr)
+# Agregamos 'gridExtra' y 'grid' para poder guardar tablas como imágenes
+pacman::p_load(tidyverse, SPEI, lubridate, fs, here, knitr, gridExtra, grid)
 
 # 2. Definir Rutas de Datos Crudos
-# Asumimos que los archivos están en "data/data_raw/" con nombres simplificados
-# (Si usas los nombres largos originales, cámbialos aquí)
-
-# Estación Las Ramadas
 ruta_ram_pp   <- here::here("data", "data_raw", "ramadas_pmen.csv")
 ruta_ram_tmax <- here::here("data", "data_raw", "ramadas_tmax.csv")
 ruta_ram_tmin <- here::here("data", "data_raw", "ramadas_tmin.csv")
 
-# Estación Cogotí
 ruta_cog_pp   <- here::here("data", "data_raw", "cogoti_pmen.csv")
 ruta_cog_tmax <- here::here("data", "data_raw", "cogoti_tmax.csv")
 ruta_cog_tmin <- here::here("data", "data_raw", "cogoti_tmin.csv")
@@ -49,17 +45,16 @@ dir_data_proc <- here::here("data", "data_procesada")
 archivos_requeridos <- c(ruta_ram_pp, ruta_ram_tmax, ruta_ram_tmin, 
                          ruta_cog_pp, ruta_cog_tmax, ruta_cog_tmin)
 
-existencia <- file.exists(archivos_requeridos)
-if (!all(existencia)) {
-  stop("ERROR: Faltan archivos en data/data_raw/. Verifica los nombres.\nFaltan: ", 
-       paste(archivos_requeridos[!existencia], collapse = "\n"))
+if (!all(file.exists(archivos_requeridos))) {
+  faltantes <- archivos_requeridos[!file.exists(archivos_requeridos)]
+  stop("ERROR: Faltan archivos en data/data_raw/:\n", paste(faltantes, collapse = "\n"))
 }
 
 # Crear carpetas de salida
 if (!dir.exists(dir_figuras)) dir.create(dir_figuras, recursive = TRUE)
 if (!dir.exists(dir_data_proc)) dir.create(dir_data_proc, recursive = TRUE)
 
-message("Configuración exitosa. Archivos crudos encontrados.")
+message("Configuración exitosa. Archivos encontrados.")
 ```
 
 ## 2. Procesamiento de datos
@@ -71,12 +66,11 @@ En esta etapa leemos los archivos individuales de temperatura y precipitación, 
 #| message: false
 #| warning: false
 
-# Función auxiliar para leer y preparar cada archivo
-# Lee el CSV, selecciona solo año/mes/valor y renombra la columna valor
+# Función auxiliar para leer
 leer_variable <- function(ruta, nombre_var) {
   read_csv(ruta, show_col_types = FALSE) %>%
     select(agno, mes, valor) %>%
-    rename(!!nombre_var := valor) # Renombra 'valor' a 'pmen', 'tmax' o 'tmin'
+    rename(!!nombre_var := valor)
 }
 
 # --- PROCESAMIENTO LAS RAMADAS ---
@@ -84,7 +78,7 @@ ram_pp   <- leer_variable(ruta_ram_pp, "pmen")
 ram_tmax <- leer_variable(ruta_ram_tmax, "tmax")
 ram_tmin <- leer_variable(ruta_ram_tmin, "tmin")
 
-# Unir las 3 variables (full_join para no perder meses si falta algún dato)
+# Unimos por año y mes
 df_ramadas <- list(ram_pp, ram_tmax, ram_tmin) %>%
   reduce(full_join, by = c("agno", "mes")) %>%
   mutate(estacion = "Las Ramadas")
@@ -98,10 +92,9 @@ df_cogoti <- list(cog_pp, cog_tmax, cog_tmin) %>%
   reduce(full_join, by = c("agno", "mes")) %>%
   mutate(estacion = "Cogotí")
 
-# - --- UNIFICACIÓN Y CÁLCULOS ---
+# --- UNIFICACIÓN Y CÁLCULOS ---
 datos <- bind_rows(df_ramadas, df_cogoti) %>%
   mutate(fecha = make_date(agno, mes, 1)) %>%
-  # --- CORRECCIÓN CLAVE AQUÍ ---
   # Eliminamos filas sin temperatura ANTES de calcular hargreaves
   drop_na(tmax, tmin) %>%
   mutate(
@@ -113,7 +106,7 @@ datos <- bind_rows(df_ramadas, df_cogoti) %>%
   drop_na(bal) %>%
   arrange(estacion, fecha)
 
-# Guardar CSV procesado completo
+# Guardar CSV procesado
 write_csv(datos, path(dir_data_proc, "datos_procesados_unificados.csv"))
 
 # --- CÁLCULO DE SPEI ---
@@ -127,13 +120,12 @@ datos_spei <- datos %>%
   unnest(cols = c(data, spei_12, spei_03)) %>% 
   ungroup()
 
-# Mostrar un resumen
 glimpse(datos_spei)
 ```
 
 ## 3. Visualización de precipitación mensual
 
-Análisis de la distribución de lluvias para la estación Las Ramadas (1970-2015).
+Análisis de la distribución de lluvias para ambas estaciones (1970-2015).
 
 ```{r}
 #| label: fig-boxplot
@@ -163,18 +155,20 @@ generar_boxplot <- function(nombre_estacion) {
   
   meses_esp <- c("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
   
-  # Función interna de dibujo (Estilo ORIGINAL)
+  # Función interna de dibujo
   dibujar <- function() {
     par(mar = c(4, 5, 3, 1))
-    
-    # Boxplot estándar (sin eje manual)
     boxplot(pmen ~ factor(mes, levels=1:12, labels = meses_esp), data = df_box,
             col = colores, outline = FALSE, 
             main = paste("Precipitación Mensual en", nombre_estacion, "(1970-2015)"),
-            ylab = "Precipitación acumulada (mm)", 
-            xlab = "", # Dejamos esto vacío para que no salga el texto técnico "factor(mes...)"
+            ylab = "Pp (mm)", 
+            xlab = "", # Eliminamos etiqueta por defecto
+            xaxt = "n", # Apagamos eje automático
             las = 1, varwidth = TRUE)
             
+    # Dibujamos eje X manual para asegurar que salgan todos los meses
+    axis(1, at = 1:12, labels = meses_esp, las = 1, cex.axis = 0.9)
+    
     grid(nx = NA, ny = NULL, lty = 3)
     legend("topright", legend=c("Alta precipitación","Baja precipitación"), fill=c(paleta[100], paleta[1]), bty="n", cex=0.8)
   }
@@ -185,7 +179,7 @@ generar_boxplot <- function(nombre_estacion) {
   # B. Guardar como PNG
   # Limpiar nombre (Ej: "Las Ramadas" -> "las_ramadas")
   nombre_limpio <- tolower(gsub(" ", "_", nombre_estacion)) 
-  # Eliminar acentos para el nombre del archivo (opcional, pero recomendado)
+  # Eliminar acentos para el nombre del archivo
   nombre_limpio <- iconv(nombre_limpio, to="ASCII//TRANSLIT")
   
   nombre_archivo <- paste0("boxplot_", nombre_limpio, ".png")
@@ -197,7 +191,6 @@ generar_boxplot <- function(nombre_estacion) {
 
 # 3. Iterar la función sobre cada estación usando purrr::walk
 walk(estaciones_lista, generar_boxplot)
-
 ```
 
 ## 4. Visualización: Índice SPEI
@@ -229,7 +222,7 @@ plot_spei <- function(df, var_spei, titulo) {
       na.translate = FALSE 
     ) +
     
-    # MODIFICACIÓN: Forzar que aparezcan todos los números enteros en el eje Y
+    # Eje Y con enteros forzados
     scale_y_continuous(breaks = seq(-10, 10, 1)) +
     
     labs(title = titulo, x = "Año", y = "SPEI") +
